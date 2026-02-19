@@ -9,6 +9,8 @@ import Signup from './pages/Signup'
 import AdminPanel from './pages/AdminPanel'
 import AdminLogin from './pages/AdminLogin'
 import SmartBookingDashboard from './pages/SmartBookingDashboard'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 
 function AppContent() {
     const location = useLocation();
@@ -26,7 +28,8 @@ function AppContent() {
                     <Route path="/admin/login" element={<AdminLogin />} />
                     <Route path="/dashboard" element={<SmartBookingDashboard />} />
                     <Route path="/my-bookings" element={<SmartBookingDashboard />} />
-                    {/* Add more routes here as we build them */}
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password/:token" element={<ResetPassword />} />
                 </Routes>
             </main>
             {!isNoLayoutPage && <Footer />}
@@ -45,3 +48,4 @@ function App() {
 }
 
 export default App
+

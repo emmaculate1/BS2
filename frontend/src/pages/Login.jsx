@@ -67,7 +67,8 @@ const Login = () => {
                     <div>
                         <div className="flex justify-between mb-2">
                             <label className="block text-sm font-bold text-gray-700">Password</label>
-                            <a href="#" className="text-xs text-primary font-bold hover:underline">Forgot?</a>
+                            {/* ✅ Fixed: now links to forgot-password page */}
+                            <Link to="/forgot-password" className="text-xs text-primary font-bold hover:underline">Forgot?</Link>
                         </div>
                         <div className="relative">
                             <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
@@ -109,3 +110,4 @@ const Login = () => {
 };
 
 export default Login;
+
