@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import {
     Users,
     Home,
@@ -22,6 +22,16 @@ const AdminPanel = () => {
     const [rooms, setRooms] = useState([]);
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isAddingRoom, setIsAddingRoom] = useState(false);
+    const [newRoom, setNewRoom] = useState({
+        name: '',
+        type: 'Conference',
+        capacity: 10,
+        price: 2000,
+        description: '',
+        amenities: [],
+        image_url: ''
+    });
     const { user: currentUser } = useAuth();
     const navigate = useNavigate();
 
@@ -40,13 +50,13 @@ const AdminPanel = () => {
             const config = { headers: { Authorization: `Bearer ${token}` } };
 
             if (activeTab === 'users') {
-                const res = await axios.get('http://localhost:5000/api/auth/users', config);
+                const res = await api.get('/api/auth/users', config);
                 setUsers(res.data.data || []);
             } else if (activeTab === 'rooms') {
-                const res = await axios.get('http://localhost:5000/api/rooms', config);
+                const res = await api.get('/api/rooms', config);
                 setRooms(res.data.data || []);
             } else if (activeTab === 'bookings') {
-                const res = await axios.get('http://localhost:5000/api/bookings', config);
+                const res = await api.get('/api/bookings', config);
                 setBookings(res.data.data || []);
             }
         } catch (error) {
@@ -60,12 +70,39 @@ const AdminPanel = () => {
         if (!window.confirm('Are you sure you want to delete this room?')) return;
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:5000/api/rooms/${id}`, {
+            await api.delete(`/api/rooms/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setRooms(rooms.filter(room => room.id !== id));
         } catch (error) {
             alert('Error deleting room');
+        }
+    };
+
+    const handleUpdateBookingStatus = async (id, status) => {
+        try {
+            const token = localStorage.getItem('token');
+            await api.put(`/api/bookings/${id}`, { status }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setBookings(bookings.map(b => b.id === id ? { ...b, status } : b));
+        } catch (error) {
+            alert('Error updating booking status');
+        }
+    };
+
+    const handleAddRoom = async (e) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem('token');
+            const res = await api.post('/api/rooms', newRoom, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setRooms([...rooms, res.data.data]);
+            setIsAddingRoom(false);
+            setNewRoom({ name: '', type: 'Conference', capacity: 10, price: 2000, description: '', amenities: [], image_url: '' });
+        } catch (error) {
+            alert('Error adding room');
         }
     };
 
@@ -87,14 +124,12 @@ const AdminPanel = () => {
                                 <div className="w-8 h-8 bg-primary/10 text-primary rounded-full flex items-center justify-center">
                                     <UserCircle size={18} />
                                 </div>
-                                <span className="font-medium text-gray-800">{user.name}</span>
+                                <span className="font-medium text-gray-800">{user.full_name}</span>
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
                             <td className="px-6 py-4">
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.is_online ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                                    }`}>
-                                    <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${user.is_online ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                                    {user.is_online ? 'Online' : 'Offline'}
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    {user.role}
                                 </span>
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-500">
@@ -111,11 +146,66 @@ const AdminPanel = () => {
         <div className="space-y-4">
             <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                 <h3 className="font-bold text-gray-800">Room Inventory</h3>
-                <button className="bg-primary hover:bg-opacity-90 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center space-x-2 transition-all">
+                <button
+                    onClick={() => setIsAddingRoom(!isAddingRoom)}
+                    className="bg-primary hover:bg-opacity-90 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center space-x-2 transition-all"
+                >
                     <Plus size={18} />
-                    <span>Add Room</span>
+                    <span>{isAddingRoom ? 'Cancel' : 'Add Room'}</span>
                 </button>
             </div>
+
+            {isAddingRoom && (
+                <form onSubmit={handleAddRoom} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input
+                            placeholder="Room Name"
+                            className="p-2 border rounded-lg"
+                            value={newRoom.name}
+                            onChange={(e) => setNewRoom({ ...newRoom, name: e.target.value })}
+                            required
+                        />
+                        <select
+                            className="p-2 border rounded-lg"
+                            value={newRoom.type}
+                            onChange={(e) => setNewRoom({ ...newRoom, type: e.target.value })}
+                        >
+                            <option>Conference</option>
+                            <option>Hall</option>
+                            <option>Lab</option>
+                        </select>
+                        <input
+                            type="number"
+                            placeholder="Capacity"
+                            className="p-2 border rounded-lg"
+                            value={newRoom.capacity}
+                            onChange={(e) => setNewRoom({ ...newRoom, capacity: parseInt(e.target.value) })}
+                        />
+                        <input
+                            type="number"
+                            placeholder="Price per hour"
+                            className="p-2 border rounded-lg"
+                            value={newRoom.price}
+                            onChange={(e) => setNewRoom({ ...newRoom, price: parseInt(e.target.value) })}
+                        />
+                        <input
+                            placeholder="Image URL"
+                            className="p-2 border rounded-lg md:col-span-2"
+                            value={newRoom.image_url}
+                            onChange={(e) => setNewRoom({ ...newRoom, image_url: e.target.value })}
+                        />
+                    </div>
+                    <textarea
+                        placeholder="Description"
+                        className="w-full p-2 border rounded-lg"
+                        value={newRoom.description}
+                        onChange={(e) => setNewRoom({ ...newRoom, description: e.target.value })}
+                    />
+                    <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded-lg font-bold">
+                        Save Room
+                    </button>
+                </form>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {rooms.map(room => (
                     <div key={room.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group">
@@ -140,10 +230,19 @@ const AdminPanel = () => {
                             </div>
                         </div>
                         <div className="p-4">
-                            <h4 className="font-bold text-gray-800">{room.name}</h4>
+                            <div className="flex justify-between items-start mb-2">
+                                <h4 className="font-bold text-gray-800">{room.name}</h4>
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                                    (room.status || '').toLowerCase() === 'available' ? 'bg-green-100 text-green-700' :
+                                    (room.status || '').toLowerCase() === 'booked' ? 'bg-red-100 text-red-700' :
+                                    'bg-amber-100 text-amber-700'
+                                }`}>
+                                    {room.status || 'Available'}
+                                </span>
+                            </div>
                             <div className="flex justify-between items-center mt-2">
                                 <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">{room.type}</span>
-                                <span className="text-primary font-bold">${room.price}/hr</span>
+                                <span className="text-primary font-bold">KSh {room.price}/hr</span>
                             </div>
                         </div>
                     </div>
@@ -161,6 +260,7 @@ const AdminPanel = () => {
                         <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Room</th>
                         <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
                         <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -168,8 +268,8 @@ const AdminPanel = () => {
                         <tr key={booking.id} className="hover:bg-gray-50/50 transition-colors">
                             <td className="px-6 py-4 text-sm font-medium text-gray-800">{booking.user_name}</td>
                             <td className="px-6 py-4 text-sm text-gray-600">{booking.room_name}</td>
-                            <td className="px-6 py-4 text-sm text-gray-500">
-                                {new Date(booking.check_in).toLocaleDateString()}
+                             <td className="px-6 py-4 text-sm text-gray-500">
+                                {new Date(booking.booking_date).toLocaleDateString()}
                             </td>
                             <td className="px-6 py-4">
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
@@ -177,6 +277,26 @@ const AdminPanel = () => {
                                     }`}>
                                     {booking.status}
                                 </span>
+                            </td>
+                            <td className="px-6 py-4 space-x-2">
+                                {booking.status === 'pending' && (
+                                    <>
+                                        <button
+                                            onClick={() => handleUpdateBookingStatus(booking.id, 'confirmed')}
+                                            className="p-1 text-green-600 hover:bg-green-50 rounded"
+                                            title="Accept"
+                                        >
+                                            <CheckCircle2 size={20} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleUpdateBookingStatus(booking.id, 'rejected')}
+                                            className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                            title="Reject"
+                                        >
+                                            <XCircle size={20} />
+                                        </button>
+                                    </>
+                                )}
                             </td>
                         </tr>
                     ))}

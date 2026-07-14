@@ -1,4 +1,5 @@
 import express from 'express';
+import { protect, authorize } from '../middleware/auth.js';
 import {
     getAllBookings,
     getBooking,
@@ -11,13 +12,13 @@ import {
 const router = express.Router();
 
 router.route('/')
-    .get(getAllBookings)
+    .get(protect, authorize('admin'), getAllBookings)
     .post(createBooking);
 
 router.route('/:id')
     .get(getBooking)
-    .put(updateBooking)
-    .delete(deleteBooking);
+    .put(protect, authorize('admin'), updateBooking)
+    .delete(protect, authorize('admin'), deleteBooking);
 
 router.get('/user/:userId', getUserBookings);
 

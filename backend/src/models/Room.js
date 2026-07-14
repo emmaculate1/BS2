@@ -49,7 +49,7 @@ class Room {
 
     // Get available rooms
     static async findAvailable() {
-        const [rows] = await pool.query('SELECT * FROM rooms WHERE status = "available" ORDER BY created_at DESC');
+        const [rows] = await pool.query('SELECT * FROM rooms WHERE LOWER(status) = "available" ORDER BY created_at DESC');
         return rows;
     }
 }

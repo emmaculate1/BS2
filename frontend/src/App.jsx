@@ -11,6 +11,7 @@ import AdminLogin from './pages/AdminLogin'
 import SmartBookingDashboard from './pages/SmartBookingDashboard'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import BookVenue from './pages/BookVenue'
 
 function AppContent() {
     const location = useLocation();
@@ -30,6 +31,7 @@ function AppContent() {
                     <Route path="/my-bookings" element={<SmartBookingDashboard />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password/:token" element={<ResetPassword />} />
+                    <Route path="/book/:id" element={<BookVenue />} />
                 </Routes>
             </main>
             {!isNoLayoutPage && <Footer />}

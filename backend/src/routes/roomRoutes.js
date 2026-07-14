@@ -1,4 +1,5 @@
 import express from 'express';
+import { protect, authorize } from '../middleware/auth.js';
 import {
     getAllRooms,
     getRoomById,
@@ -13,8 +14,8 @@ const router = express.Router();
 router.get('/', getAllRooms);
 router.get('/available', getAvailableRooms);
 router.get('/:id', getRoomById);
-router.post('/', createRoom);
-router.put('/:id', updateRoom);
-router.delete('/:id', deleteRoom);
+router.post('/', protect, authorize('admin'), createRoom);
+router.put('/:id', protect, authorize('admin'), updateRoom);
+router.delete('/:id', protect, authorize('admin'), deleteRoom);
 
 export default router;

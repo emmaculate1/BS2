@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, MessageSquare, MapPin, Users, Star, ChevronRight, Loader2, Shield, Heart } from 'lucide-react';
-import axios from 'axios';
+import { Calendar, MessageSquare, MapPin, Users, Star, ChevronRight, Loader2, Shield } from 'lucide-react';
+import api from '../api';
 
 const Home = () => {
     const [rooms, setRooms] = useState([]);
@@ -10,7 +10,7 @@ const Home = () => {
     useEffect(() => {
         const fetchRooms = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/rooms');
+                const res = await api.get('/api/rooms');
                 setRooms(res.data.data || []);
             } catch (error) {
                 console.error('Error fetching rooms:', error);
@@ -83,7 +83,7 @@ const Home = () => {
                                 <div key={room.id} className="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1">
                                     <div className="relative h-48 overflow-hidden">
                                         <img src={room.image_url || "https://images.unsplash.com/photo-1431540015161-0bf868a2d407?auto=format&fit=crop&q=80&w=800"} alt={room.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider text-gray-800">{room.type}</div>
+                                        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider text-gray-800">{room.space}</div>
                                     </div>
                                     <div className="p-6">
                                         <h3 className="text-xl font-serif font-bold text-gray-800 mb-2">{room.name}</h3>
@@ -101,7 +101,8 @@ const Home = () => {
                                         <div className="flex items-center justify-between">
                                             <div className="flex flex-col">
                                                 <span className="text-[10px] text-gray-400 uppercase font-bold">Starting from</span>
-                                                <span className="text-lg font-bold text-primary">${room.price}</span>
+                                                {/* ✅ Fixed: KSh instead of $ */}
+                                                <span className="text-lg font-bold text-primary">KSh {Number(room.price).toLocaleString()}</span>
                                             </div>
                                             <Link to={`/book/${room.id}`} className="bg-primary hover:bg-opacity-90 text-white px-4 py-2 rounded text-sm font-bold transition-all shadow-sm">Book Now</Link>
                                         </div>
@@ -161,3 +162,4 @@ const Home = () => {
 };
 
 export default Home;
+
